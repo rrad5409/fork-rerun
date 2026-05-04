@@ -6,7 +6,7 @@ namespace rerun.archetypes;
 table RawBytes (
   "attr.docs.category": "Other",
   "attr.docs.view_types": "RawBytesView",
-  "attr.rerun.state": "stable",
+  "attr.rerun.state": "unstable",
   "attr.rerun.visualizer": "RawBytes",
   "attr.rust.derive": "PartialEq"
 ) {

@@ -16,6 +16,9 @@
 
 namespace rerun::archetypes {
     /// **Archetype**: A chunk of raw bytes.
+    ///
+    /// ⚠ **This type is _unstable_ and may change significantly in a way that the data won't be backwards compatible.**
+    ///
     struct RawBytes {
         /// Raw binary data.
         std::optional<ComponentBatch> blob;

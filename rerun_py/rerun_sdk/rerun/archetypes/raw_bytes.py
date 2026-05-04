@@ -28,7 +28,11 @@ __all__ = ["RawBytes"]
 
 @define(str=False, repr=False, init=False)
 class RawBytes(Archetype, VisualizableArchetype):
-    """**Archetype**: A chunk of raw bytes."""
+    """
+    **Archetype**: A chunk of raw bytes.
+
+    ⚠️ **This type is _unstable_ and may change significantly in a way that the data won't be backwards compatible.**
+    """
 
     NAME: ClassVar[str] = "rerun.archetypes.RawBytes"
 
