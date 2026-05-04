@@ -1,9 +1,9 @@
+use std::ops::Index;
 use std::slice;
 
 use egui::{Label, Sense, Widget};
-use itertools::Itertools as _;
-use re_sdk_types::{View as _, ViewClassIdentifier};
-use re_ui::{Help, OnResponseExt, UiExt, icons};
+use re_sdk_types::{View as _, ViewClassIdentifier, components};
+use re_ui::{Help, UiExt};
 use re_viewer_context::external::re_log_types::EntityPath;
 use re_viewer_context::{
     IdentifiedViewSystem as _, Item, SystemCommand, SystemCommandSender as _, ViewClass,
@@ -26,16 +26,82 @@ enum Base {
     Hex = 16,
 }
 
-// impl std::fmt::Display for Base {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         let s = match self {
-//             Base::Binary => "Binary",
-//             Base::Octal => "Octal",
-//             Base::Hex => "Hex",
-//         };
-//         f.write_str(s)
-//     }
-// }
+/// Represents a class of characters, used to distinguish them when rendering
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, strum::Display, strum::EnumIter)]
+enum CharacterClass {
+    Alphabet,
+    Numeric,
+    Punctuation,
+    Control,
+    Other,
+}
+
+impl CharacterClass {
+    pub fn get(c: char) -> Self {
+        if c.is_digit(10) {
+            Self::Numeric
+        } else if c.is_alphabetic() {
+            Self::Alphabet
+        } else if c.is_ascii_punctuation() {
+            Self::Punctuation
+        } else if c.is_control() || c.is_ascii_control() {
+            Self::Control
+        } else {
+            Self::Other
+        }
+    }
+    /// Gets the foreground colour for this class
+    pub fn foreground(self) -> egui::Color32 {
+        match self {
+            Self::Alphabet => egui::Color32::WHITE,
+            Self::Numeric => egui::Color32::LIGHT_GREEN,
+            Self::Punctuation => egui::Color32::LIGHT_BLUE,
+            Self::Control => egui::Color32::MAGENTA,
+            Self::Other => egui::Color32::LIGHT_RED,
+        }
+    }
+}
+
+/// Represents a class of digits, used to render them in different colours.
+///
+/// E.g. for binary we have `DigitClass::BinaryZero` and `DigitClass::BinaryOne`
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, strum::Display, strum::EnumIter)]
+enum DigitClass {
+    BinaryZero,
+    BinaryOne,
+    OctalZero,
+    OctalNum,
+    HexZero,
+    HexNum,
+    HexLetter,
+    Unknown,
+}
+
+impl DigitClass {
+    pub fn get(base: Base, c: char) -> Self {
+        match (base, c) {
+            (Base::Binary, '0') => Self::BinaryZero,
+            (Base::Binary, '1') => Self::BinaryOne,
+            (Base::Octal, '0') => Self::OctalZero,
+            (Base::Octal, '1'..='7') => Self::OctalNum,
+            (Base::Hex, '0') => Self::HexZero,
+            (Base::Hex, '1'..='9') => Self::HexNum,
+            (Base::Hex, 'a'..='f' | 'A'..='F') => Self::HexLetter,
+            _ => Self::Unknown,
+        }
+    }
+
+    /// Gets the foreground colour for this class
+    pub fn foreground(self) -> egui::Color32 {
+        match self {
+            Self::BinaryZero | Self::OctalZero | Self::HexZero => egui::Color32::GRAY,
+            Self::BinaryOne | Self::OctalNum => egui::Color32::WHITE,
+            Self::HexNum => egui::Color32::LIGHT_GREEN,
+            Self::HexLetter => egui::Color32::LIGHT_BLUE,
+            Self::Unknown => egui::Color32::LIGHT_RED,
+        }
+    }
+}
 
 pub struct RawBytesViewState {
     range: (usize, usize),
@@ -113,7 +179,6 @@ impl ViewClass for RawBytesView {
         _view_id: ViewId,
     ) -> Result<(), ViewSystemExecutionError> {
         let state = state.downcast_mut::<RawBytesViewState>()?;
-        let tokens = ui.tokens();
 
         ui.warning_label("TODO: selected ui");
 
@@ -252,87 +317,145 @@ fn increment_buttons<
 fn raw_bytes_ui(ui: &mut egui::Ui, state: &mut RawBytesViewState, entries: &[RawBytesEntry]) {
     let tokens = ui.tokens();
 
-    match entries {
-        [] => {
-            // We get here if we scroll back time to before the first text document was logged.
-            ui.weak("(empty)");
-        }
-        [RawBytesEntry { blob }] => {
-            let buf = &blob.0.0;
+    if entries.is_empty() {
+        ui.weak("(nothing to show here)");
+        return;
+    }
 
-            // slice the buffer for selected offset range
-            let slice_start = if state.trim.0 {
-                state.range.0.min(buf.len())
-            } else {
-                0
-            };
-            let slice_end = if state.trim.1 {
-                state.range.1.min(buf.len()).max(slice_start)
-            } else {
-                buf.len()
-            };
-            let slice = &buf[slice_start..slice_end];
+    let fmt_usize = |n: usize| match state.base {
+        Base::Binary => format!("{n:08b}"),
+        Base::Octal => format!("{n:03o}"),
+        Base::Hex => format!("{n:02X}"),
+    };
+    let fmt_u8 = |n: u8| match state.base {
+        Base::Binary => format!("{n:08b}"),
+        Base::Octal => format!("{n:03o}"),
+        Base::Hex => format!("{n:02X}"),
+    };
 
-            let text = egui::RichText::new(format!("{slice:?}")).monospace();
+    for entry in entries {
+        let buf = &entry.blob.0.0;
 
-            ui.label("Raw");
-            ui.add(Label::new(text).wrap_mode(egui::TextWrapMode::Wrap));
-            ui.add_space(8.0);
+        // slice the buffer for selected offset range
+        let slice_start = if state.trim.0 {
+            state.range.0.min(buf.len())
+        } else {
+            0
+        };
+        let slice_end = if state.trim.1 {
+            state.range.1.min(buf.len()).max(slice_start)
+        } else {
+            buf.len()
+        };
+        let slice = &buf[slice_start..slice_end];
 
-            // TODO(rrad5409): this would be better using `egui_table::Table`
-
-            egui::Grid::new("grid").show(ui, |ui| {
-                // header row
-                ui.colored_label(tokens.text_strong, "Offset");
-                ui.colored_label(tokens.text_strong, "Data");
-                ui.colored_label(tokens.text_strong, "Text");
-                ui.end_row();
-
-                ui.style_mut().spacing.item_spacing.x = 0.0;
-                // slice our slice into chunks
-                for (chunk_idx, chunk) in slice.chunks(state.width).enumerate() {
-                    let chunk_start = slice_start + chunk_idx * state.width;
-                    let chunk_end = chunk_start + chunk.len() - 1;
-                    match state.base {
-                        Base::Binary => ui.monospace(format!("{:b}..{:b}", chunk_start, chunk_end)),
-                        Base::Octal => ui.monospace(format!("{:o}..{:o}", chunk_start, chunk_end)),
-                        Base::Hex => ui.monospace(format!("{:X}..{:X}", chunk_start, chunk_end)),
-                    };
-                    ui.horizontal(|ui| {
-                        for b in chunk {
-                            match state.base {
-                                Base::Binary => ui.monospace(format!("{b:08b}")),
-                                Base::Octal => ui.monospace(format!("{b:03o}")),
-                                Base::Hex => ui.monospace(format!("{b:02X}")),
-                            };
-                        }
-                    });
-                    ui.horizontal(|ui| {
-                        for b in chunk {
-                            ui.monospace(str::from_utf8(slice::from_ref(b)).unwrap_or("?"));
-                        }
-                    });
-                    ui.end_row();
+        // TODO(rrad5409): this would be better using `egui_table::Table`
+        ui.heading(entry.path.ui_string());
+        egui_extras::TableBuilder::new(ui)
+            .id_salt(&entry.path)
+            .columns(egui_extras::Column::auto().clip(false), 3)
+            .resizable(false)
+            .striped(false)
+            .header(tokens.table_header_height(), |mut row| {
+                row.col(|ui| {
+                    ui.colored_label(tokens.text_strong, "Offset");
+                });
+                row.col(|ui| {
+                    ui.colored_label(tokens.text_strong, "Raw");
+                });
+                row.col(|ui| {
+                    ui.colored_label(tokens.text_strong, "Text");
+                });
+            })
+            .body(|body| {
+                if slice.is_empty() {
+                    return;
                 }
+                body.rows(
+                    tokens.table_row_height(re_ui::TableStyle::Dense),
+                    ((slice.len() - 1) / state.width) + 1,
+                    |mut row| {
+                        let chunk_start = row.index() * state.width;
+                        let chunk_end = (chunk_start + state.width).min(slice.len());
+                        let chunk = &slice[chunk_start..chunk_end];
+
+                        row.set_overline(row.index() % 8 == 0);
+
+                        // position cells
+                        row.col(|ui| {
+                            egui::Label::new(
+                                egui::RichText::new(format!(
+                                    "{}..{}",
+                                    fmt_usize(chunk_start),
+                                    fmt_usize(chunk_end)
+                                ))
+                                .monospace(),
+                            )
+                            .extend()
+                            .ui(ui);
+                        });
+
+                        // raw cells
+                        row.col(|ui| {
+                            let mut job = egui::text::LayoutJob::default();
+                            let font = ui.style().text_styles.index(&egui::TextStyle::Monospace);
+
+                            for &b in chunk {
+                                let s = fmt_u8(b);
+                                for c in s.chars() {
+                                    let class = DigitClass::get(state.base, c);
+                                    job.append(
+                                        &c.to_string(),
+                                        0.0,
+                                        egui::TextFormat::simple(font.clone(), class.foreground()),
+                                    );
+                                }
+                                job.append(" ", 0.0, egui::TextFormat::default());
+                            }
+
+                            egui::Label::new(job).extend().ui(ui);
+                        });
+
+                        // text cells
+                        row.col(|ui| {
+                            let mut job = egui::text::LayoutJob::default();
+                            let font = ui.style().text_styles.index(&egui::TextStyle::Monospace);
+
+                            for &b in chunk {
+                                let mut c = char::from_u32(b as u32).unwrap_or('?');
+                                let class = CharacterClass::get(c);
+                                // control characters make the spacing funky, so we replace them
+                                if c.is_ascii_control() {
+                                    c = '.';
+                                }
+                                job.append(
+                                    &c.to_string(),
+                                    0.0,
+                                    egui::text::TextFormat {
+                                        font_id: font.clone(),
+                                        color: class.foreground(),
+                                        ..Default::default()
+                                    },
+                                );
+                            }
+
+                            egui::Label::new(job).extend().ui(ui);
+                        });
+                    },
+                );
             });
 
-            // egui_extras::TableBuilder::new(ui).column(egui_extras::Column::auto())
-
-            // let mut table = TableDelegate {
-            //     buffer: buf,
-            //     offsets: (slice_start, slice_end),
-            //     base: state.base,
-            //     width: state.width,
-            // };
-            // egui_table::Table::new()
-            //     // .num_sticky_cols(state.width * 2 + 3)
-            //     .columns((0..))
-            //     .num_rows(((slice.len() - 1) / state.width) as u64 + 1)
-            //     .show(ui, &mut table);
-        }
-        _ => {
-            ui.error_label("TODO (@rrad5409): multiple results handling");
-        }
+        // let mut table = TableDelegate {
+        //     buffer: buf,
+        //     offsets: (slice_start, slice_end),
+        //     base: state.base,
+        //     width: state.width,
+        // };
+        // egui_table::Table::new()
+        //     // .num_sticky_cols(state.width * 2 + 3)
+        //     .columns((0..))
+        //     .num_rows(((slice.len() - 1) / state.width) as u64 + 1)
+        //     .show(ui, &mut table);
     }
 }
 

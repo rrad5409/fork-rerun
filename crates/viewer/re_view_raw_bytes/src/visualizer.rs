@@ -1,4 +1,5 @@
 use re_chunk_store::LatestAtQuery;
+use re_log_types::EntityPath;
 use re_sdk_types::Archetype as _;
 use re_sdk_types::archetypes;
 use re_sdk_types::components;
@@ -12,6 +13,7 @@ use re_viewer_context::{
 
 #[derive(Debug, Clone)]
 pub struct RawBytesEntry {
+    pub path: EntityPath,
     pub blob: components::Blob,
 }
 
@@ -61,7 +63,10 @@ impl VisualizerSystem for RawBytesSystem {
             else {
                 continue;
             };
-            text_entries.push(RawBytesEntry { blob: blob.clone() });
+            text_entries.push(RawBytesEntry {
+                blob: blob.clone(),
+                path: results.entity_path().clone(),
+            });
         }
 
         Ok(VisualizerExecutionOutput::default().with_visualizer_data(text_entries))

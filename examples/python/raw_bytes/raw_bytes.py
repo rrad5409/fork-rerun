@@ -27,16 +27,25 @@ The full source code for this example is available
 def log_data() -> None:
     rr.log("description", rr.TextDocument(DESCRIPTION, media_type=rr.MediaType.MARKDOWN), static=True)
 
-    rr.set_time("log_time", duration=0)
-
-    by = b"{hello: this, is: {some: text, 2: 3}}" + np.random.bytes(128)
-
     rr.log(
-        "helix/structure/scaffolding",
-        rr.RawBytes(
-            blob=rr.Blob(by)
-        ),
-        static=True,
+        "some/random/bytes",
+        rr.RawBytes(rr.Blob(np.random.bytes(128))),
+    )
+    rr.log(
+        "not-really-json",
+        rr.RawBytes(blob=rr.Blob(b"{hello: this, is: {some: text, 2: 3}}")),
+    )
+    rr.log(
+        "password/symbols",
+        rr.RawBytes(b"HMACG%v*MAnx$nVf4cj1jUtw3esNqgfr7aWuB%KZF21yT^KyncvPp8vHb%ngNvbV")
+    )
+    rr.log(
+        "password/memorable",
+        rr.RawBytes(b"Carbon1*Curling52Sixth1^Clapping04Crewless3")
+    )
+    rr.log(
+        "sentences",
+        rr.RawBytes(b"Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.")
     )
 
 
