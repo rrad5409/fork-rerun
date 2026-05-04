@@ -29,7 +29,8 @@ enum Base {
 /// Represents a class of characters, used to distinguish them when rendering
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, strum::Display, strum::EnumIter)]
 enum CharacterClass {
-    Alphabet,
+    Upper,
+    Lower,
     Numeric,
     Punctuation,
     Control,
@@ -40,8 +41,10 @@ impl CharacterClass {
     pub fn get(c: char) -> Self {
         if c.is_digit(10) {
             Self::Numeric
-        } else if c.is_alphabetic() {
-            Self::Alphabet
+        } else if c.is_uppercase() {
+            Self::Upper
+        } else if c.is_lowercase() {
+            Self::Lower
         } else if c.is_ascii_punctuation() {
             Self::Punctuation
         } else if c.is_control() || c.is_ascii_control() {
@@ -53,11 +56,12 @@ impl CharacterClass {
     /// Gets the foreground colour for this class
     pub fn foreground(self) -> egui::Color32 {
         match self {
-            Self::Alphabet => egui::Color32::WHITE,
-            Self::Numeric => egui::Color32::LIGHT_GREEN,
-            Self::Punctuation => egui::Color32::LIGHT_BLUE,
-            Self::Control => egui::Color32::MAGENTA,
-            Self::Other => egui::Color32::LIGHT_RED,
+            Self::Upper => egui::Color32::WHITE,
+            Self::Lower => egui::Color32::from_gray(0xC8),
+            Self::Numeric => egui::Color32::from_rgb(0x50, 0x70, 0xF0),
+            Self::Punctuation => egui::Color32::GREEN,
+            Self::Control => egui::Color32::ORANGE,
+            Self::Other => egui::Color32::MAGENTA,
         }
     }
 }
@@ -94,10 +98,14 @@ impl DigitClass {
     /// Gets the foreground colour for this class
     pub fn foreground(self) -> egui::Color32 {
         match self {
-            Self::BinaryZero | Self::OctalZero | Self::HexZero => egui::Color32::GRAY,
-            Self::BinaryOne | Self::OctalNum => egui::Color32::WHITE,
-            Self::HexNum => egui::Color32::LIGHT_GREEN,
-            Self::HexLetter => egui::Color32::LIGHT_BLUE,
+            // strong contrast
+            Self::BinaryZero => egui::Color32::GRAY,
+            Self::BinaryOne => egui::Color32::WHITE,
+            // lower contrast to not be overwhelming
+            Self::OctalZero | Self::HexZero => egui::Color32::LIGHT_GRAY,
+            Self::OctalNum | Self::HexNum => egui::Color32::LIGHT_GREEN,
+            Self::HexLetter => egui::Color32::from_rgb(0x50, 0x70, 0xF0),
+            // fallback
             Self::Unknown => egui::Color32::LIGHT_RED,
         }
     }
@@ -386,8 +394,8 @@ fn raw_bytes_ui(ui: &mut egui::Ui, state: &mut RawBytesViewState, entries: &[Raw
                             egui::Label::new(
                                 egui::RichText::new(format!(
                                     "{}..{}",
-                                    fmt_usize(chunk_start),
-                                    fmt_usize(chunk_end)
+                                    fmt_usize(slice_start + chunk_start),
+                                    fmt_usize(slice_start + chunk_end)
                                 ))
                                 .monospace(),
                             )
