@@ -10155,6 +10155,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "re_view_raw_bytes"
+version = "0.32.0-alpha.1+dev"
+dependencies = [
+ "egui",
+ "egui_commonmark",
+ "egui_extras",
+ "egui_table",
+ "emath",
+ "itertools 0.14.0",
+ "num-traits",
+ "re_chunk_store",
+ "re_log_types",
+ "re_sdk_types",
+ "re_test_context",
+ "re_test_viewport",
+ "re_tracing",
+ "re_ui",
+ "re_view",
+ "re_viewer_context",
+ "re_viewport_blueprint",
+ "strum",
+ "strum_macros",
+]
+
+[[package]]
 name = "re_view_spatial"
 version = "0.32.0-alpha.1+dev"
 dependencies = [
@@ -10396,6 +10421,7 @@ dependencies = [
  "re_view_dataframe",
  "re_view_graph",
  "re_view_map",
+ "re_view_raw_bytes",
  "re_view_spatial",
  "re_view_status",
  "re_view_tensor",

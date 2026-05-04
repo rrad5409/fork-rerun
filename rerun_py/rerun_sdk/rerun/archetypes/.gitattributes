@@ -35,6 +35,7 @@ mesh3d.py linguist-generated=true
 pinhole.py linguist-generated=true
 points2d.py linguist-generated=true
 points3d.py linguist-generated=true
+raw_bytes.py linguist-generated=true
 recording_info.py linguist-generated=true
 scalars.py linguist-generated=true
 segmentation_image.py linguist-generated=true

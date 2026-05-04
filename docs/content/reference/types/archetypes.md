@@ -36,6 +36,10 @@ This page lists all built-in archetypes.
 * [`McapSchema`](archetypes/mcap_schema.md): A schema definition that describes the structure of messages in an MCAP file.
 * [`McapStatistics`](archetypes/mcap_statistics.md): Recording-level statistics about an MCAP file, logged as a part of [`archetypes.RecordingInfo`](https://rerun.io/docs/reference/types/archetypes/recording_info).
 
+## Other
+
+* [`RawBytes`](archetypes/raw_bytes.md): A chunk of raw bytes.
+
 ## Plotting
 
 * [`BarChart`](archetypes/bar_chart.md): A bar chart.

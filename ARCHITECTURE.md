@@ -152,6 +152,7 @@ Update instructions:
 | re_view_dataframe      | A View that shows the data contained in entities in a table.                                               |
 | re_view_graph          | A View that shows a graph (node-link diagram).                                                             |
 | re_view_map            | A View that shows geospatial data on a map.                                                                |
+| re_view_raw_bytes      | Views that display raw binary data objects.                                                                |
 | re_view_spatial        | Views that show entities in a 2D or 3D spatial relationship.                                               |
 | re_view_status         | A view that shows status transitions as horizontal lanes over time.                                        |
 | re_view_tensor         | A View dedicated to visualizing tensors with arbitrary dimensionality.                                     |

@@ -33,6 +33,7 @@ include "./archetypes/mesh3d.fbs";
 include "./archetypes/pinhole.fbs";
 include "./archetypes/points2d.fbs";
 include "./archetypes/points3d.fbs";
+include "./archetypes/raw_bytes.fbs";
 include "./archetypes/recording_info.fbs";
 include "./archetypes/scalars.fbs";
 include "./archetypes/segmentation_image.fbs";

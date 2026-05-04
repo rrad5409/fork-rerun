@@ -47,6 +47,11 @@ fn populate_view_class_registry_with_builtin(
         app_options,
         fallback_registry,
     )?;
+    view_class_registry.add_class::<re_view_raw_bytes::RawBytesView>(
+        reflection,
+        app_options,
+        fallback_registry,
+    )?;
     view_class_registry.add_class::<re_view_spatial::SpatialView2D>(
         reflection,
         app_options,

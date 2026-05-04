@@ -35,6 +35,7 @@ from .mesh3d import Mesh3D
 from .pinhole import Pinhole
 from .points2d import Points2D
 from .points3d import Points3D
+from .raw_bytes import RawBytes
 from .recording_info import RecordingInfo
 from .scalars import Scalars
 from .segmentation_image import SegmentationImage
@@ -84,6 +85,7 @@ __all__ = [
     "Pinhole",
     "Points2D",
     "Points3D",
+    "RawBytes",
     "RecordingInfo",
     "Scalars",
     "SegmentationImage",

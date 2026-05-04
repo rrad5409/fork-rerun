@@ -3231,6 +3231,22 @@ fn generate_archetype_reflection() -> ArchetypeReflectionMap {
             },
         ),
         (
+            ArchetypeName::new("rerun.archetypes.RawBytes"),
+            ArchetypeReflection {
+                display_name: "Raw bytes",
+                deprecation_summary: None,
+                scope: None,
+                view_types: &["RawBytesView"],
+                fields: vec![ArchetypeFieldReflection {
+                    name: "blob",
+                    display_name: "Blob",
+                    component_type: "rerun.components.Blob".into(),
+                    docstring_md: "Raw binary data.",
+                    flags: ArchetypeFieldFlags::REQUIRED | ArchetypeFieldFlags::UI_EDITABLE,
+                }],
+            },
+        ),
+        (
             ArchetypeName::new("rerun.archetypes.RecordingInfo"),
             ArchetypeReflection {
                 display_name: "Recording info",

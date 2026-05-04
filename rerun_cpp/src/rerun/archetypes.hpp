@@ -35,6 +35,7 @@
 #include "archetypes/pinhole.hpp"
 #include "archetypes/points2d.hpp"
 #include "archetypes/points3d.hpp"
+#include "archetypes/raw_bytes.hpp"
 #include "archetypes/recording_info.hpp"
 #include "archetypes/scalars.hpp"
 #include "archetypes/segmentation_image.hpp"

@@ -1,0 +1,8 @@
+namespace rerun.blueprint.views;
+
+/// A view of a single binary piece of data, for use with [archetypes.RawBytes].
+table RawBytesView (
+    "attr.rerun.view_identifier": "RawBytes"
+) {
+}
+
