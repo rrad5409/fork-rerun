@@ -40,6 +40,7 @@ num-traits.workspace = true
 strum.workspace = true
 strum_macros.workspace = true
 itertools.workspace = true
+paste.workspace = true
 
 [dev-dependencies]
 re_log_types.workspace = true

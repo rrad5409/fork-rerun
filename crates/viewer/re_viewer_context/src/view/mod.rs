@@ -48,8 +48,9 @@ pub use visualizability_constraints::{
     BufferAndFormatConstraint, SingleRequiredComponentConstraint, VisualizabilityConstraints,
 };
 pub use visualizer_system::{
-    VisualizerCollection, VisualizerExecutionOutput, VisualizerInstructionReport,
-    VisualizerQueryInfo, VisualizerReportContext, VisualizerReportSeverity, VisualizerSystem,
+    SortedComponentSet, VisualizerCollection, VisualizerExecutionOutput,
+    VisualizerInstructionReport, VisualizerQueryInfo, VisualizerReportContext,
+    VisualizerReportSeverity, VisualizerSystem,
 };
 
 // ---------------------------------------------------------------------------

@@ -357,7 +357,11 @@ fn raw_bytes_ui(ui: &mut egui::Ui, state: &mut RawBytesViewState, entries: &[Raw
         let slice = &buf[slice_start..slice_end];
 
         // PERF(rrad5409): this would be better using `egui_table::Table`
-        ui.heading(entry.path.ui_string());
+        ui.heading(format!(
+            "{} : {}",
+            entry.path.ui_string(),
+            entry.component.as_str()
+        ));
         egui_extras::TableBuilder::new(ui)
             .id_salt(&entry.path)
             .columns(egui_extras::Column::auto().clip(false), 3)

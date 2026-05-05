@@ -132,16 +132,17 @@ pub use self::utils::{
 pub use self::view::{
     BufferAndFormatConstraint, DataResult, IdentifiedViewSystem, OptionalViewEntityHighlight,
     PerSystemEntities, RecommendedMappings, RecommendedView, RecommendedVisualizers,
-    SingleRequiredComponentConstraint, SystemExecutionOutput, ViewClass, ViewClassExt,
-    ViewClassLayoutPriority, ViewClassPlaceholder, ViewClassRegistry, ViewClassRegistryError,
-    ViewContext, ViewContextCollection, ViewContextSystem, ViewContextSystemOncePerFrameResult,
-    ViewEntityHighlight, ViewHighlights, ViewOutlineMasks, ViewQuery, ViewSpawnHeuristics,
-    ViewState, ViewStateExt, ViewStates, ViewSystemExecutionError, ViewSystemIdentifier,
-    ViewSystemRegistrator, ViewSystemState, VisualizabilityConstraints, VisualizerCollection,
-    VisualizerComponentMappings, VisualizerComponentSource, VisualizerExecutionOutput,
-    VisualizerInstruction, VisualizerInstructionReport, VisualizerInstructionsPerType,
-    VisualizerQueryInfo, VisualizerReportContext, VisualizerReportSeverity, VisualizerSystem,
-    VisualizerTypeReport, VisualizerViewReport, VisualizersSectionOutput, VisualizersSectionUi,
+    SingleRequiredComponentConstraint, SortedComponentSet, SystemExecutionOutput, ViewClass,
+    ViewClassExt, ViewClassLayoutPriority, ViewClassPlaceholder, ViewClassRegistry,
+    ViewClassRegistryError, ViewContext, ViewContextCollection, ViewContextSystem,
+    ViewContextSystemOncePerFrameResult, ViewEntityHighlight, ViewHighlights, ViewOutlineMasks,
+    ViewQuery, ViewSpawnHeuristics, ViewState, ViewStateExt, ViewStates, ViewSystemExecutionError,
+    ViewSystemIdentifier, ViewSystemRegistrator, ViewSystemState, VisualizabilityConstraints,
+    VisualizerCollection, VisualizerComponentMappings, VisualizerComponentSource,
+    VisualizerExecutionOutput, VisualizerInstruction, VisualizerInstructionReport,
+    VisualizerInstructionsPerType, VisualizerQueryInfo, VisualizerReportContext,
+    VisualizerReportSeverity, VisualizerSystem, VisualizerTypeReport, VisualizerViewReport,
+    VisualizersSectionOutput, VisualizersSectionUi,
 };
 pub use self::viewer_context::ViewerContext;
 pub use self::visitor_flow_control::VisitorControlFlow; // Historical reasons
