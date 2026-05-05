@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-An 
+A minimal example that demonstrates using the Raw Bytes view.
+
+Multiple archetypes and components are supported.
 """
 
 from __future__ import annotations
 
 import argparse
-from math import tau
 
 import numpy as np
 
 import rerun as rr  # pip install rerun-sdk
-from rerun import blueprint as rrb
 
 DESCRIPTION = """
 # Raw Bytes
@@ -25,7 +25,11 @@ The full source code for this example is available
 
 
 def log_data() -> None:
-    rr.log("description", rr.TextDocument(DESCRIPTION, media_type=rr.MediaType.MARKDOWN), static=True)
+    rr.log(
+        "description",
+        rr.TextDocument(DESCRIPTION, media_type=rr.MediaType.MARKDOWN),
+        static=True,
+    )
 
     rr.log(
         "some/random/bytes",
@@ -37,15 +41,15 @@ def log_data() -> None:
     )
     rr.log(
         "password/symbols",
-        rr.RawBytes(b"HMACG%v*MAnx$nVf4cj1jUtw3esNqgfr7aWuB%KZF21yT^KyncvPp8vHb%ngNvbV")
+        rr.RawBytes(b"HMACG%v*MAnx$nVf4cj1jUtw3esNqgfr7aWuB%KZF21yT^KyncvPp8vHb%ngNvbV"),
     )
     rr.log(
         "password/memorable",
-        rr.RawBytes(b"Carbon1*Curling52Sixth1^Clapping04Crewless3")
+        rr.RawBytes(b"Carbon1*Curling52Sixth1^Clapping04Crewless3"),
     )
     rr.log(
-        "sentences",
-        rr.RawBytes(b"Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.")
+        "text",
+        rr.TextDocument("Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos."),
     )
 
 

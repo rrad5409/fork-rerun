@@ -1,8 +1,7 @@
 use std::ops::Index;
-use std::slice;
 
-use egui::{Label, Sense, Widget};
-use re_sdk_types::{View as _, ViewClassIdentifier, components};
+use egui::{Sense, Widget};
+use re_sdk_types::{View as _, ViewClassIdentifier};
 use re_ui::{Help, UiExt};
 use re_viewer_context::external::re_log_types::EntityPath;
 use re_viewer_context::{
@@ -342,7 +341,7 @@ fn raw_bytes_ui(ui: &mut egui::Ui, state: &mut RawBytesViewState, entries: &[Raw
     };
 
     for entry in entries {
-        let buf = &entry.blob.0.0;
+        let buf = &entry.buf;
 
         // slice the buffer for selected offset range
         let slice_start = if state.trim.0 {
@@ -357,7 +356,7 @@ fn raw_bytes_ui(ui: &mut egui::Ui, state: &mut RawBytesViewState, entries: &[Raw
         };
         let slice = &buf[slice_start..slice_end];
 
-        // TODO(rrad5409): this would be better using `egui_table::Table`
+        // PERF(rrad5409): this would be better using `egui_table::Table`
         ui.heading(entry.path.ui_string());
         egui_extras::TableBuilder::new(ui)
             .id_salt(&entry.path)
@@ -382,6 +381,7 @@ fn raw_bytes_ui(ui: &mut egui::Ui, state: &mut RawBytesViewState, entries: &[Raw
                 body.rows(
                     tokens.table_row_height(re_ui::TableStyle::Dense),
                     ((slice.len() - 1) / state.width) + 1,
+                    // PERF(rrad5409): does egui automatically only run render visible rows?
                     |mut row| {
                         let chunk_start = row.index() * state.width;
                         let chunk_end = (chunk_start + state.width).min(slice.len());
@@ -389,7 +389,13 @@ fn raw_bytes_ui(ui: &mut egui::Ui, state: &mut RawBytesViewState, entries: &[Raw
 
                         row.set_overline(row.index() % 8 == 0);
 
-                        // position cells
+                        // PERF(rrad5409): I don't like the repeated allocations here
+                        // - formatting for row offset
+                        // - making single chars into strings
+                        // - creating a new LayoutJob every row
+                        // - new TextFormat per char
+
+                        // offset
                         row.col(|ui| {
                             egui::Label::new(
                                 egui::RichText::new(format!(
@@ -403,7 +409,7 @@ fn raw_bytes_ui(ui: &mut egui::Ui, state: &mut RawBytesViewState, entries: &[Raw
                             .ui(ui);
                         });
 
-                        // raw cells
+                        // raw
                         row.col(|ui| {
                             let mut job = egui::text::LayoutJob::default();
                             let font = ui.style().text_styles.index(&egui::TextStyle::Monospace);
@@ -424,7 +430,7 @@ fn raw_bytes_ui(ui: &mut egui::Ui, state: &mut RawBytesViewState, entries: &[Raw
                             egui::Label::new(job).extend().ui(ui);
                         });
 
-                        // text cells
+                        // text
                         row.col(|ui| {
                             let mut job = egui::text::LayoutJob::default();
                             let font = ui.style().text_styles.index(&egui::TextStyle::Monospace);
