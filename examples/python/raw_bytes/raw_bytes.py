@@ -8,9 +8,9 @@ Multiple archetypes and components are supported.
 from __future__ import annotations
 
 import argparse
-
+import os
+import pathlib
 import numpy as np
-
 import rerun as rr  # pip install rerun-sdk
 
 DESCRIPTION = """
@@ -32,24 +32,26 @@ def log_data() -> None:
     )
 
     rr.log(
-        "some/random/bytes",
+        "bytes",
         rr.RawBytes(rr.Blob(np.random.bytes(128))),
     )
     rr.log(
-        "not-really-json",
-        rr.RawBytes(blob=rr.Blob(b"{hello: this, is: {some: text, 2: 3}}")),
+        "text_bytes",
+        rr.RawBytes(blob=rr.Blob(b"{Hello: this, is: {some: text, 2: 3}}")),
     )
     rr.log(
-        "password/symbols",
+        "password",
         rr.RawBytes(b"HMACG%v*MAnx$nVf4cj1jUtw3esNqgfr7aWuB%KZF21yT^KyncvPp8vHb%ngNvbV"),
     )
     rr.log(
-        "password/memorable",
-        rr.RawBytes(b"Carbon1*Curling52Sixth1^Clapping04Crewless3"),
+        "status",
+        rr.Status(status="<status/ok>")
     )
     rr.log(
-        "text",
-        rr.TextDocument("Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos."),
+        "image",
+        rr.EncodedImage(
+            path=pathlib.Path(os.path.dirname(__file__)).parent.parent / "assets/example.jpg"
+        )
     )
 
 

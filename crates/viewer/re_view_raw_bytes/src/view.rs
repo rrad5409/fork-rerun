@@ -123,7 +123,7 @@ impl Default for RawBytesViewState {
             range: (usize::MIN, usize::MAX),
             trim: (false, false),
             base: Base::default(),
-            width: 16,
+            width: 48,
         }
     }
 }

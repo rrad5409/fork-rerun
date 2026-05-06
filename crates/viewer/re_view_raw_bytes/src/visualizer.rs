@@ -11,8 +11,11 @@ use re_viewer_context::{
 
 #[derive(Debug, Clone)]
 pub struct RawBytesEntry {
+    /// The entity that this entry was sourced from
     pub path: EntityPath,
+    /// The component that we read this entry from
     pub component: re_sdk_types::ComponentIdentifier,
+    /// The raw data of this entry
     pub buf: arrow::buffer::Buffer,
 }
 
@@ -31,7 +34,7 @@ macro_rules! implementation {
             $( $archetype:path > $field:ident ),+ $(,)?
         } => |$var:ident| $map:expr
     ),* $(,)?) => {
-        // TODO: make this `const` once `Archetype::descriptor_xx()` becomes `const fn`
+        /// The set of all `ComponentIdentifier`s that this visualiser is able to read from
         static COMPONENT_IDENTIFIERS
             : std::sync::LazyLock<re_sdk_types::ComponentSet>
             = std::sync::LazyLock::new(|| { paste::paste!{
@@ -39,6 +42,8 @@ macro_rules! implementation {
                     <$archetype>:: [< descriptor_ $field >] ().component,
                 )+ )* ])
             } } );
+
+        /// The set of all `ComponentDescriptor`s that this visualiser can read from.
         static COMPONENT_DESCRIPTORS
             : std::sync::LazyLock<re_viewer_context::SortedComponentSet>
             = std::sync::LazyLock::new(|| { paste::paste!{
@@ -57,7 +62,6 @@ macro_rules! implementation {
                     constraints: re_viewer_context::VisualizabilityConstraints::AnyBuiltinComponent(
                         COMPONENT_IDENTIFIERS.clone()
                     ),
-
                     // TODO: I don't know what this does - it doesn't seem to affect anything
                     queried: COMPONENT_DESCRIPTORS.clone(),
                 }
@@ -93,7 +97,7 @@ macro_rules! implementation {
                                 .get_mono::<$component>(
                                     <$archetype>:: [< descriptor_ $field >] ().component
                                 )
-                                .map(|$var| $map)
+                                .map(|$var : $component| $map)
                                 .map(|buf| (buf, <$archetype>:: [< descriptor_ $field >] ().component)),
                         )+ )*
                     ] };
@@ -115,9 +119,54 @@ macro_rules! implementation {
 
 implementation! {
     components::Blob {
+        archetypes::Asset3D > blob,
+        archetypes::AssetVideo > blob,
+        archetypes::EncodedDepthImage > blob,
+        archetypes::EncodedImage > blob,
+        archetypes::McapMessage > data,
+        archetypes::McapSchema > data,
         archetypes::RawBytes > blob,
     } => |blob| blob.0.0.into_inner(),
     components::Text {
         archetypes::TextDocument > text,
-    } => |text| text.0.0.into_arrow_buffer()
+        archetypes::Status > status,
+        archetypes::TextLog > text,
+        archetypes::McapSchema > name,
+        archetypes::McapSchema > encoding,
+        archetypes::McapChannel > topic,
+        archetypes::McapChannel > message_encoding,
+    } => |text| text.0.0.into_arrow_buffer(),
+    components::ImageBuffer {
+        archetypes::Image > buffer,
+        archetypes::Mesh3D > albedo_texture_buffer,
+        archetypes::GridMap > data,
+        archetypes::DepthImage > buffer,
+        archetypes::SegmentationImage > buffer,
+    } => |img| img.0.0.into_inner(),
+    components::VideoSample {
+        archetypes::VideoStream > sample,
+    } => |sample| sample.0.0.into_inner(),
+
+    // TODO: these are arrays not elements, and are currently unsupported
+
+    // [components::Text] {
+    //     archetypes::Boxes2D > labels,
+    //     archetypes::Boxes3D > labels,
+    //     archetypes::Points2D > labels,
+    //     archetypes::Points3D > labels,
+    //     archetypes::Arrows2D > labels,
+    //     archetypes::Arrows3D > labels,
+    //     archetypes::LineStrips2D > labels,
+    //     archetypes::LineStrips3D > labels,
+    //     archetypes::Capsules3D > labels,
+    //     archetypes::Cylinders3D > labels,
+    //     archetypes::GraphNodes > labels,
+    // } => |text| text.0.0.into_arrow_buffer(),
+    // [components::Scalar] {
+    //     archetypes::Scalars > scalars,
+    //     // these two aren't yet implemented, but might be in the future
+    //     // (see comments in their codegen `.fbs`)
+    //     // archetypes::SeriesLines > scalars,
+    //     // archetypes::SeriesPoints > scalars,
+    // } => |scalar| todo!("maybe use `bytemuck` to cast"),
 }

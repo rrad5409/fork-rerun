@@ -6,6 +6,7 @@ mod visualizer;
 pub use view::RawBytesView;
 
 // TODO:
-// - archetype
-// - component
 // - blueprint
+// - toggle for unicode/ascii/whatever
+// - replace \n with enter unicode char
+// - two-wide chars and escape them
