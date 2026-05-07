@@ -28,6 +28,7 @@ impl IdentifiedViewSystem for RawBytesSystem {
         "RawBytes".into()
     }
 }
+
 macro_rules! implementation {
     ($(
         $component:path {

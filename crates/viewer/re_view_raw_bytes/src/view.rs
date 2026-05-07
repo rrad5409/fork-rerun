@@ -1,6 +1,6 @@
 use std::ops::Index;
 
-use egui::{Sense, Widget};
+use egui::{Color32, Sense, Widget};
 use re_sdk_types::{View as _, ViewClassIdentifier};
 use re_ui::{Help, UiExt};
 use re_viewer_context::external::re_log_types::EntityPath;
@@ -120,10 +120,10 @@ pub struct RawBytesViewState {
 impl Default for RawBytesViewState {
     fn default() -> Self {
         Self {
-            range: (usize::MIN, usize::MAX),
+            range: (0, 0),
             trim: (false, false),
             base: Base::default(),
-            width: 48,
+            width: 40,
         }
     }
 }
@@ -329,12 +329,12 @@ fn raw_bytes_ui(ui: &mut egui::Ui, state: &mut RawBytesViewState, entries: &[Raw
         return;
     }
 
-    let fmt_usize = |n: usize| match state.base {
-        Base::Binary => format!("{n:08b}"),
-        Base::Octal => format!("{n:03o}"),
-        Base::Hex => format!("{n:02X}"),
+    let fmt_offset = |n: usize| match state.base {
+        Base::Binary => format!("{n:016b}"),
+        Base::Octal => format!("{n:08o}"),
+        Base::Hex => format!("{n:06X}"),
     };
-    let fmt_u8 = |n: u8| match state.base {
+    let fmt_byte = |n: u8| match state.base {
         Base::Binary => format!("{n:08b}"),
         Base::Octal => format!("{n:03o}"),
         Base::Hex => format!("{n:02X}"),
@@ -358,9 +358,10 @@ fn raw_bytes_ui(ui: &mut egui::Ui, state: &mut RawBytesViewState, entries: &[Raw
 
         // PERF(rrad5409): this would be better using `egui_table::Table`
         ui.heading(format!(
-            "{} : {}",
+            "{} ({}) [{:} bytes]",
             entry.path.ui_string(),
-            entry.component.as_str()
+            entry.component.as_str(),
+            entry.buf.len(),
         ));
         egui_extras::TableBuilder::new(ui)
             .id_salt(&entry.path)
@@ -404,8 +405,8 @@ fn raw_bytes_ui(ui: &mut egui::Ui, state: &mut RawBytesViewState, entries: &[Raw
                             egui::Label::new(
                                 egui::RichText::new(format!(
                                     "{}..{}",
-                                    fmt_usize(slice_start + chunk_start),
-                                    fmt_usize(slice_start + chunk_end)
+                                    fmt_offset(slice_start + chunk_start),
+                                    fmt_offset(slice_start + chunk_end)
                                 ))
                                 .monospace(),
                             )
@@ -419,7 +420,7 @@ fn raw_bytes_ui(ui: &mut egui::Ui, state: &mut RawBytesViewState, entries: &[Raw
                             let font = ui.style().text_styles.index(&egui::TextStyle::Monospace);
 
                             for &b in chunk {
-                                let s = fmt_u8(b);
+                                let s = fmt_byte(b);
                                 for c in s.chars() {
                                     let class = DigitClass::get(state.base, c);
                                     job.append(
@@ -428,9 +429,21 @@ fn raw_bytes_ui(ui: &mut egui::Ui, state: &mut RawBytesViewState, entries: &[Raw
                                         egui::TextFormat::simple(font.clone(), class.foreground()),
                                     );
                                 }
-                                job.append(" ", 0.0, egui::TextFormat::default());
+                                // space between bytes
+                                job.append(
+                                    " ",
+                                    0.0,
+                                    egui::TextFormat::simple(font.clone(), Color32::TRANSPARENT),
+                                );
                             }
-
+                            // pad to fill the width, so all lines are the same length
+                            (chunk.len()..state.width).for_each(|_| {
+                                job.append(
+                                    "   ",
+                                    0.0,
+                                    egui::TextFormat::simple(font.clone(), Color32::TRANSPARENT),
+                                )
+                            });
                             egui::Label::new(job).extend().ui(ui);
                         });
 
@@ -457,6 +470,14 @@ fn raw_bytes_ui(ui: &mut egui::Ui, state: &mut RawBytesViewState, entries: &[Raw
                                 );
                             }
 
+                            // pad to fill the width, so all lines are the same length
+                            (chunk.len()..state.width).for_each(|_| {
+                                job.append(
+                                    " ",
+                                    0.0,
+                                    egui::TextFormat::simple(font.clone(), Color32::TRANSPARENT),
+                                )
+                            });
                             egui::Label::new(job).extend().ui(ui);
                         });
                     },
