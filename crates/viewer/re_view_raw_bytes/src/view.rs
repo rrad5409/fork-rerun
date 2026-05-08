@@ -323,24 +323,19 @@ fn increment_buttons<
 
 fn raw_bytes_ui(ui: &mut egui::Ui, state: &mut RawBytesViewState, entries: &[RawBytesEntry]) {
     let tokens = ui.tokens();
+    let font_id = ui
+        .style()
+        .text_styles
+        .index(&egui::TextStyle::Monospace)
+        .clone();
+    let total_height = ui.available_height();
 
     if entries.is_empty() {
-        ui.weak("(nothing to show here)");
+        ui.weak("(no components returned for current query and filters)");
         return;
     }
 
-    let fmt_offset = |n: usize| match state.base {
-        Base::Binary => format!("{n:016b}"),
-        Base::Octal => format!("{n:08o}"),
-        Base::Hex => format!("{n:06X}"),
-    };
-    let fmt_byte = |n: u8| match state.base {
-        Base::Binary => format!("{n:08b}"),
-        Base::Octal => format!("{n:03o}"),
-        Base::Hex => format!("{n:02X}"),
-    };
-
-    for entry in entries {
+    for (idx, entry) in entries.into_iter().enumerate() {
         let buf = &entry.buf;
 
         // slice the buffer for selected offset range
@@ -354,166 +349,247 @@ fn raw_bytes_ui(ui: &mut egui::Ui, state: &mut RawBytesViewState, entries: &[Raw
         } else {
             buf.len()
         };
-        let slice = &buf[slice_start..slice_end];
 
-        // PERF(rrad5409): this would be better using `egui_table::Table`
-        ui.heading(format!(
-            "{} ({}) [{:} bytes]",
+        let id = ui
+            .unique_id()
+            .with(&entry.path)
+            .with(&entry.component.as_str());
+
+        let heading = format!(
+            "{} ({}) [{}/{} bytes]",
             entry.path.ui_string(),
             entry.component.as_str(),
+            slice_end - slice_start,
             entry.buf.len(),
-        ));
-        egui_extras::TableBuilder::new(ui)
-            .id_salt(&entry.path)
-            .columns(egui_extras::Column::auto().clip(false), 3)
-            .resizable(false)
-            .striped(false)
-            .header(tokens.table_header_height(), |mut row| {
-                row.col(|ui| {
-                    ui.colored_label(tokens.text_strong, "Offset");
-                });
-                row.col(|ui| {
-                    ui.colored_label(tokens.text_strong, "Raw");
-                });
-                row.col(|ui| {
-                    ui.colored_label(tokens.text_strong, "Text");
-                });
-            })
-            .body(|body| {
-                if slice.is_empty() {
-                    return;
-                }
-                body.rows(
-                    tokens.table_row_height(re_ui::TableStyle::Dense),
-                    ((slice.len() - 1) / state.width) + 1,
-                    // PERF(rrad5409): does egui automatically only run render visible rows?
-                    |mut row| {
-                        let chunk_start = row.index() * state.width;
-                        let chunk_end = (chunk_start + state.width).min(slice.len());
-                        let chunk = &slice[chunk_start..chunk_end];
+        );
 
-                        row.set_overline(row.index() % 8 == 0);
-
-                        // PERF(rrad5409): I don't like the repeated allocations here
-                        // - formatting for row offset
-                        // - making single chars into strings
-                        // - creating a new LayoutJob every row
-                        // - new TextFormat per char
-
-                        // offset
-                        row.col(|ui| {
-                            egui::Label::new(
-                                egui::RichText::new(format!(
-                                    "{}..{}",
-                                    fmt_offset(slice_start + chunk_start),
-                                    fmt_offset(slice_start + chunk_end)
-                                ))
-                                .monospace(),
-                            )
-                            .extend()
-                            .ui(ui);
-                        });
-
-                        // raw
-                        row.col(|ui| {
-                            let mut job = egui::text::LayoutJob::default();
-                            let font = ui.style().text_styles.index(&egui::TextStyle::Monospace);
-
-                            for &b in chunk {
-                                let s = fmt_byte(b);
-                                for c in s.chars() {
-                                    let class = DigitClass::get(state.base, c);
-                                    job.append(
-                                        &c.to_string(),
-                                        0.0,
-                                        egui::TextFormat::simple(font.clone(), class.foreground()),
-                                    );
-                                }
-                                // space between bytes
-                                job.append(
-                                    " ",
-                                    0.0,
-                                    egui::TextFormat::simple(font.clone(), Color32::TRANSPARENT),
-                                );
-                            }
-                            // pad to fill the width, so all lines are the same length
-                            (chunk.len()..state.width).for_each(|_| {
-                                job.append(
-                                    "   ",
-                                    0.0,
-                                    egui::TextFormat::simple(font.clone(), Color32::TRANSPARENT),
-                                )
-                            });
-                            egui::Label::new(job).extend().ui(ui);
-                        });
-
-                        // text
-                        row.col(|ui| {
-                            let mut job = egui::text::LayoutJob::default();
-                            let font = ui.style().text_styles.index(&egui::TextStyle::Monospace);
-
-                            for &b in chunk {
-                                let mut c = char::from_u32(b as u32).unwrap_or('?');
-                                let class = CharacterClass::get(c);
-                                // control characters make the spacing funky, so we replace them
-                                if c.is_ascii_control() {
-                                    c = '.';
-                                }
-                                job.append(
-                                    &c.to_string(),
-                                    0.0,
-                                    egui::text::TextFormat {
-                                        font_id: font.clone(),
-                                        color: class.foreground(),
-                                        ..Default::default()
-                                    },
-                                );
-                            }
-
-                            // pad to fill the width, so all lines are the same length
-                            (chunk.len()..state.width).for_each(|_| {
-                                job.append(
-                                    " ",
-                                    0.0,
-                                    egui::TextFormat::simple(font.clone(), Color32::TRANSPARENT),
-                                )
-                            });
-                            egui::Label::new(job).extend().ui(ui);
-                        });
-                    },
-                );
+        // don't redo during sizing passes, to avoid resize loops
+        let resize = !ui.is_sizing_pass()
+            && ui.data_mut(|map| {
+                let resize = Some(state.width) != map.get_temp(id);
+                map.insert_temp(id, state.width);
+                resize
             });
 
-        // let mut table = TableDelegate {
-        //     buffer: buf,
-        //     offsets: (slice_start, slice_end),
-        //     base: state.base,
-        //     width: state.width,
-        // };
-        // egui_table::Table::new()
-        //     // .num_sticky_cols(state.width * 2 + 3)
-        //     .columns((0..))
-        //     .num_rows(((slice.len() - 1) / state.width) as u64 + 1)
-        //     .show(ui, &mut table);
+        let table = TableDelegate {
+            buffer: buf,
+            tokens,
+            auto_size: resize,
+            font_id: font_id.clone(),
+            offsets: (slice_start, slice_end),
+            base: state.base,
+            width: state.width,
+        };
+
+        // need to push the id so sibling tables don't conflict with each other
+        ui.push_id(id, |ui| {
+            // also need to limit the height, else the first table takes it all
+            // this is imperfect and leaves some unused space, but the alternative
+            // is clipping because the table expands too far
+            let h_total = total_height / (entries.len() as f32);
+            let h_heading = egui::TextStyle::Heading.resolve(ui.style()).size;
+            let h_spacer = 12.0;
+            ui.set_min_height(0.0);
+            ui.set_max_height(h_total - h_heading - h_spacer);
+            // draw a separator line between consecutive entries
+            if idx > 0 {
+                ui.separator();
+            }
+            ui.heading(&heading);
+            ui.add(table);
+        });
     }
 }
 
-// struct TableDelegate<'a> {
-//     buffer: &'a [u8],
-//     offsets: (usize, usize),
-//     base: Base,
-//     width: usize,
-// }
-//
-// impl egui_table::TableDelegate for TableDelegate<'_> {
-//     fn header_cell_ui(&mut self, ui: &mut egui::Ui, cell: &egui_table::HeaderCellInfo) {
-//         ui.label(format!("[{}]", cell.row_nr));
-//     }
-//
-//     fn cell_ui(&mut self, ui: &mut egui::Ui, cell: &egui_table::CellInfo) {
-//         ui.label(format!("{}x{}", cell.col_nr, cell.row_nr));
-//     }
-// }
+struct TableDelegate<'a> {
+    /// The actual data to display
+    buffer: &'a [u8],
+    /// Design tokens used for styling the table
+    tokens: &'a re_ui::DesignTokens,
+    /// Font used for the table.
+    ///
+    /// Mainly used for column sizing calculations
+    font_id: egui::FontId,
+    /// Flag to auto-size the column widths this frame.
+    /// Required because auto-sizing doesn't update automatically,
+    /// and we need to recompute whenever something is modified.
+    auto_size: bool,
+    /// Offsets to sub-slice `buffer`
+    offsets: (usize, usize),
+    /// Numeric base to display the bytes in
+    base: Base,
+    /// How many bytes to display per table row
+    width: usize,
+}
+
+impl egui_table::TableDelegate for TableDelegate<'_> {
+    fn header_cell_ui(&mut self, ui: &mut egui::Ui, cell: &egui_table::HeaderCellInfo) {
+        ui.colored_label(
+            self.tokens.text_strong,
+            match cell.group_index {
+                0 => "Offset",
+                1 => "Raw",
+                2 => "Text",
+                row => unreachable!("invalid row number {row}"),
+            },
+        );
+    }
+
+    fn cell_ui(&mut self, ui: &mut egui::Ui, cell: &egui_table::CellInfo) {
+        // slice according to the visualiser's view range
+        let slice = &self.buffer[self.offsets.0..self.offsets.1];
+
+        // extract the chunk for this row
+        let chunk_start = (cell.row_nr as usize) * self.width;
+        let chunk_end = (chunk_start + self.width).min(slice.len());
+        let chunk = &slice[chunk_start..chunk_end];
+
+        // PERF(rrad5409): I don't like the repeated allocations here
+        // - formatting for row offset
+        // - making single chars into strings
+        // - creating a new LayoutJob every row
+        // - new TextFormat per char
+
+        match cell.col_nr {
+            // offset
+            0 => {
+                egui::Label::new(
+                    egui::RichText::new(format!(
+                        "{}..{} ", // add a space because tables don't have padding :(
+                        self.fmt_offset(self.offsets.0 + chunk_start),
+                        self.fmt_offset(self.offsets.0 + chunk_end)
+                    ))
+                    .monospace(),
+                )
+                .extend()
+                .ui(ui);
+            }
+
+            // raw bytes
+            1 => {
+                let mut job = egui::text::LayoutJob::default();
+                for &b in chunk {
+                    let s = self.fmt_byte(b);
+                    for c in s.chars() {
+                        let class = DigitClass::get(self.base, c);
+                        job.append(
+                            &c.to_string(),
+                            0.0,
+                            egui::TextFormat::simple(self.font_id.clone(), class.foreground()),
+                        );
+                    }
+                    // space between bytes
+                    job.append(
+                        " ",
+                        0.0,
+                        egui::TextFormat::simple(self.font_id.clone(), Color32::TRANSPARENT),
+                    );
+                }
+                // pad to fill the width, so all lines are the same length
+                (chunk.len()..self.width).for_each(|_| {
+                    job.append(
+                        "   ",
+                        0.0,
+                        egui::TextFormat::simple(self.font_id.clone(), Color32::TRANSPARENT),
+                    )
+                });
+                egui::Label::new(job).extend().ui(ui);
+            }
+
+            // text
+            2 => {
+                let mut job = egui::text::LayoutJob::default();
+
+                for &b in chunk {
+                    let mut c = char::from_u32(b as u32).unwrap_or('?');
+                    let class = CharacterClass::get(c);
+                    // control characters make the spacing funky, so we replace them
+                    if c.is_ascii_control() {
+                        c = '.';
+                    }
+                    job.append(
+                        &c.to_string(),
+                        0.0,
+                        egui::text::TextFormat::simple(self.font_id.clone(), class.foreground()),
+                    );
+                }
+
+                // pad to fill the width, so all lines are the same length
+                (chunk.len()..self.width).for_each(|_| {
+                    job.append(
+                        " ",
+                        0.0,
+                        egui::TextFormat::simple(self.font_id.clone(), Color32::TRANSPARENT),
+                    )
+                });
+                egui::Label::new(job).extend().ui(ui);
+            }
+            col => unreachable!("invalid table column {col}"),
+        };
+    }
+}
+
+impl TableDelegate<'_> {
+    fn headers(&self) -> impl Into<Vec<egui_table::HeaderRow>> {
+        [egui_table::HeaderRow::new(
+            self.tokens.table_header_height(),
+        )]
+    }
+    fn columns(&self) -> impl Into<Vec<egui_table::Column>> {
+        // auto sizing doesn't seem to work properly unfortunately
+        [
+            egui_table::Column::default()
+                .resizable(self.auto_size)
+                .auto_size_this_frame(self.auto_size),
+            egui_table::Column::default()
+                .resizable(self.auto_size)
+                .auto_size_this_frame(self.auto_size),
+            egui_table::Column::default()
+                .resizable(self.auto_size)
+                .auto_size_this_frame(self.auto_size),
+        ]
+    }
+    fn num_rows(&self) -> u64 {
+        // avoid underflow on zero-length slicing
+        if self.offsets.0 == self.offsets.1 {
+            return 0;
+        }
+        // rounds up in the case of partially filled rows
+        ((self.offsets.1 - self.offsets.0 - 1) / self.width) as u64 + 1
+    }
+    fn fmt_offset(&self, n: usize) -> String {
+        match self.base {
+            Base::Binary => format!("{n:016b}"),
+            Base::Octal => format!("{n:08o}"),
+            Base::Hex => format!("{n:06X}"),
+        }
+    }
+    fn fmt_byte(&self, n: u8) -> String {
+        match self.base {
+            Base::Binary => format!("{n:08b}"),
+            Base::Octal => format!("{n:03o}"),
+            Base::Hex => format!("{n:02X}"),
+        }
+    }
+}
+
+impl egui::Widget for &mut TableDelegate<'_> {
+    fn ui(self, ui: &mut egui::Ui) -> egui::Response {
+        let table = egui_table::Table::new();
+        table
+            .num_sticky_cols(1)
+            .num_rows(self.num_rows())
+            .headers(self.headers())
+            .columns(self.columns())
+            .show(ui, self)
+    }
+}
+
+impl egui::Widget for TableDelegate<'_> {
+    fn ui(mut self, ui: &mut egui::Ui) -> egui::Response {
+        (&mut self).ui(ui)
+    }
+}
 
 #[test]
 fn test_help_view() {

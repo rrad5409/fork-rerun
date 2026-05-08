@@ -32,7 +32,7 @@ def log_data() -> None:
     )
 
     rr.log(
-        "bytes",
+        "raw_bytes",
         rr.RawBytes(rr.Blob(np.random.bytes(128))),
     )
     rr.log(
@@ -53,6 +53,11 @@ def log_data() -> None:
             path=pathlib.Path(os.path.dirname(__file__)).parent.parent / "assets/example.jpg"
         )
     )
+    with open(pathlib.Path(os.path.dirname(__file__)).parent.parent / "assets/example.rrd", 'b+r') as file:
+        rr.log(
+            "rrd_bytes",
+            rr.RawBytes(file.read())
+        )
 
 
 def main() -> None:
