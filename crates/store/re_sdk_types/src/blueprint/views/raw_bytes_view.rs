@@ -25,7 +25,10 @@ use ::re_types_core::{DeserializationError, DeserializationResult};
 ///
 /// ⚠️ **This type is _unstable_ and may change significantly in a way that the data won't be backwards compatible.**
 #[derive(Clone, Debug)]
-pub struct RawBytesView {}
+pub struct RawBytesView {
+    /// Query for raw bytes view
+    pub query: crate::blueprint::archetypes::RawBytesQuery,
+}
 
 impl ::re_types_core::View for RawBytesView {
     #[inline]
@@ -34,14 +37,43 @@ impl ::re_types_core::View for RawBytesView {
     }
 }
 
+impl<T: Into<crate::blueprint::archetypes::RawBytesQuery>> From<T> for RawBytesView {
+    fn from(v: T) -> Self {
+        Self { query: v.into() }
+    }
+}
+
+impl std::borrow::Borrow<crate::blueprint::archetypes::RawBytesQuery> for RawBytesView {
+    #[inline]
+    fn borrow(&self) -> &crate::blueprint::archetypes::RawBytesQuery {
+        &self.query
+    }
+}
+
+impl std::ops::Deref for RawBytesView {
+    type Target = crate::blueprint::archetypes::RawBytesQuery;
+
+    #[inline]
+    fn deref(&self) -> &crate::blueprint::archetypes::RawBytesQuery {
+        &self.query
+    }
+}
+
+impl std::ops::DerefMut for RawBytesView {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut crate::blueprint::archetypes::RawBytesQuery {
+        &mut self.query
+    }
+}
+
 impl ::re_byte_size::SizeBytes for RawBytesView {
     #[inline]
     fn heap_size_bytes(&self) -> u64 {
-        0
+        self.query.heap_size_bytes()
     }
 
     #[inline]
     fn is_pod() -> bool {
-        true
+        <crate::blueprint::archetypes::RawBytesQuery>::is_pod()
     }
 }

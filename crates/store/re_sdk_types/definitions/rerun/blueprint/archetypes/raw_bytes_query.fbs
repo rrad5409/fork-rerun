@@ -1,0 +1,17 @@
+namespace rerun.blueprint.archetypes;
+
+/// A query of a single binary piece of data, for use with [archetypes.RawBytes].
+table RawBytesQuery (
+    "attr.rerun.scope": "blueprint"
+) {
+
+  // TODO(rrad5409): can these be part of the visualizer not the view system?
+
+  /// Numeric base to display bytes in
+  base: rerun.blueprint.components.NumericBase ("attr.rerun.component_required", order: 100);
+  /// How many columns to display per row
+  width: rerun.blueprint.components.ChunkSize ("attr.rerun.component_required", order: 200);
+  /// Range to filter the bytes from
+  range: rerun.blueprint.components.FilterByRange ("attr.rerun.component_required", order: 300);
+}
+

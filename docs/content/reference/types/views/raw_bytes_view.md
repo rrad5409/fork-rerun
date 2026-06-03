@@ -6,6 +6,14 @@ title: "RawBytesView"
 ⚠️ **This type is _unstable_ and may change significantly in a way that the data won't be backwards compatible.**
 A view of a single binary piece of data, for use with [`archetypes.RawBytes`](https://rerun.io/docs/reference/types/archetypes/raw_bytes).
 
+## Properties
+
+### `query`
+Query for raw bytes view
+
+* `base`: Numeric base to display bytes in
+* `width`: How many columns to display per row
+* `range`: Range to filter the bytes from
 
 ## API reference links
  * 🐍 [Python API docs for `RawBytesView`](https://ref.rerun.io/docs/python/stable/common/blueprint_views#rerun.blueprint.views.RawBytesView)

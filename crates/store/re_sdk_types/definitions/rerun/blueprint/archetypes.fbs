@@ -17,6 +17,7 @@ include "./archetypes/map_zoom.fbs";
 include "./archetypes/near_clip_plane.fbs";
 include "./archetypes/panel_blueprint.fbs";
 include "./archetypes/plot_legend.fbs";
+include "./archetypes/raw_bytes_query.fbs";
 include "./archetypes/scalar_axis.fbs";
 include "./archetypes/spatial_information.fbs";
 include "./archetypes/tensor_scalar_mapping.fbs";

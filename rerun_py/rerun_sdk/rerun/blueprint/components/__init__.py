@@ -10,6 +10,7 @@ from .auto_layout import AutoLayout, AutoLayoutBatch
 from .auto_scroll import AutoScroll, AutoScrollBatch
 from .auto_views import AutoViews, AutoViewsBatch
 from .background_kind import BackgroundKind, BackgroundKindArrayLike, BackgroundKindBatch, BackgroundKindLike
+from .chunk_size import ChunkSize, ChunkSizeBatch
 from .column_order import ColumnOrder, ColumnOrderArrayLike, ColumnOrderBatch, ColumnOrderLike
 from .column_share import ColumnShare, ColumnShareBatch
 from .component_column_selector import ComponentColumnSelector, ComponentColumnSelectorBatch
@@ -31,6 +32,7 @@ from .lock_range_during_zoom import LockRangeDuringZoom, LockRangeDuringZoomBatc
 from .loop_mode import LoopMode, LoopModeArrayLike, LoopModeBatch, LoopModeLike
 from .map_provider import MapProvider, MapProviderArrayLike, MapProviderBatch, MapProviderLike
 from .near_clip_plane import NearClipPlane, NearClipPlaneBatch
+from .numeric_base import NumericBase, NumericBaseArrayLike, NumericBaseBatch, NumericBaseLike
 from .panel_state import PanelState, PanelStateArrayLike, PanelStateBatch, PanelStateLike
 from .play_state import PlayState, PlayStateArrayLike, PlayStateBatch, PlayStateLike
 from .playback_speed import PlaybackSpeed, PlaybackSpeedBatch
@@ -75,6 +77,8 @@ __all__ = [
     "BackgroundKindArrayLike",
     "BackgroundKindBatch",
     "BackgroundKindLike",
+    "ChunkSize",
+    "ChunkSizeBatch",
     "ColumnOrder",
     "ColumnOrderArrayLike",
     "ColumnOrderBatch",
@@ -131,6 +135,10 @@ __all__ = [
     "MapProviderLike",
     "NearClipPlane",
     "NearClipPlaneBatch",
+    "NumericBase",
+    "NumericBaseArrayLike",
+    "NumericBaseBatch",
+    "NumericBaseLike",
     "PanelState",
     "PanelStateArrayLike",
     "PanelStateBatch",

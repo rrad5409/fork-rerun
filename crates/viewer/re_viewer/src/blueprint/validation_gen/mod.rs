@@ -12,6 +12,7 @@ pub use re_sdk_types::blueprint::components::AutoLayout;
 pub use re_sdk_types::blueprint::components::AutoScroll;
 pub use re_sdk_types::blueprint::components::AutoViews;
 pub use re_sdk_types::blueprint::components::BackgroundKind;
+pub use re_sdk_types::blueprint::components::ChunkSize;
 pub use re_sdk_types::blueprint::components::ColumnOrder;
 pub use re_sdk_types::blueprint::components::ColumnShare;
 pub use re_sdk_types::blueprint::components::ComponentColumnSelector;
@@ -33,6 +34,7 @@ pub use re_sdk_types::blueprint::components::LockRangeDuringZoom;
 pub use re_sdk_types::blueprint::components::LoopMode;
 pub use re_sdk_types::blueprint::components::MapProvider;
 pub use re_sdk_types::blueprint::components::NearClipPlane;
+pub use re_sdk_types::blueprint::components::NumericBase;
 pub use re_sdk_types::blueprint::components::PanelState;
 pub use re_sdk_types::blueprint::components::PlayState;
 pub use re_sdk_types::blueprint::components::PlaybackSpeed;
@@ -70,6 +72,7 @@ pub fn is_valid_blueprint(blueprint: &EntityDb) -> bool {
         && validate_component::<AutoScroll>(blueprint)
         && validate_component::<AutoViews>(blueprint)
         && validate_component::<BackgroundKind>(blueprint)
+        && validate_component::<ChunkSize>(blueprint)
         && validate_component::<ColumnOrder>(blueprint)
         && validate_component::<ColumnShare>(blueprint)
         && validate_component::<ComponentColumnSelector>(blueprint)
@@ -91,6 +94,7 @@ pub fn is_valid_blueprint(blueprint: &EntityDb) -> bool {
         && validate_component::<LoopMode>(blueprint)
         && validate_component::<MapProvider>(blueprint)
         && validate_component::<NearClipPlane>(blueprint)
+        && validate_component::<NumericBase>(blueprint)
         && validate_component::<PanelState>(blueprint)
         && validate_component::<PlayState>(blueprint)
         && validate_component::<PlaybackSpeed>(blueprint)

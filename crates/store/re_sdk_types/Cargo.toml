@@ -81,6 +81,8 @@ smallvec.workspace = true
 thiserror.workspace = true
 tiff = { workspace = true, optional = true }
 uuid = { workspace = true, features = ["serde", "v4", "js"] }
+strum.workspace = true
+strum_macros.workspace = true
 
 # External (optional)
 ecolor = { workspace = true, optional = true }

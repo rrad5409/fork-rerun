@@ -1,6 +1,7 @@
 use std::ops::Index;
 
 use egui::{Color32, Sense, Widget};
+use re_sdk_types::blueprint::components::NumericBase;
 use re_sdk_types::{View as _, ViewClassIdentifier};
 use re_ui::{Help, UiExt};
 use re_viewer_context::external::re_log_types::EntityPath;
@@ -12,18 +13,6 @@ use re_viewer_context::{
 use strum::IntoEnumIterator;
 
 use crate::visualizer::{RawBytesEntry, RawBytesSystem};
-
-// TODO: move this to component defaults
-#[derive(
-    Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, strum::Display, strum::EnumIter,
-)]
-#[repr(u8)]
-enum Base {
-    Binary = 2,
-    Octal = 8,
-    #[default]
-    Hex = 16,
-}
 
 /// Represents a class of characters, used to distinguish them when rendering
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, strum::Display, strum::EnumIter)]
@@ -81,15 +70,15 @@ enum DigitClass {
 }
 
 impl DigitClass {
-    pub fn get(base: Base, c: char) -> Self {
+    pub fn get(base: NumericBase, c: char) -> Self {
         match (base, c) {
-            (Base::Binary, '0') => Self::BinaryZero,
-            (Base::Binary, '1') => Self::BinaryOne,
-            (Base::Octal, '0') => Self::OctalZero,
-            (Base::Octal, '1'..='7') => Self::OctalNum,
-            (Base::Hex, '0') => Self::HexZero,
-            (Base::Hex, '1'..='9') => Self::HexNum,
-            (Base::Hex, 'a'..='f' | 'A'..='F') => Self::HexLetter,
+            (NumericBase::Binary, '0') => Self::BinaryZero,
+            (NumericBase::Binary, '1') => Self::BinaryOne,
+            (NumericBase::Octal, '0') => Self::OctalZero,
+            (NumericBase::Octal, '1'..='7') => Self::OctalNum,
+            (NumericBase::Hex, '0') => Self::HexZero,
+            (NumericBase::Hex, '1'..='9') => Self::HexNum,
+            (NumericBase::Hex, 'a'..='f' | 'A'..='F') => Self::HexLetter,
             _ => Self::Unknown,
         }
     }
@@ -113,7 +102,7 @@ impl DigitClass {
 pub struct RawBytesViewState {
     range: (usize, usize),
     trim: (bool, bool),
-    base: Base,
+    base: NumericBase,
     width: usize,
 }
 
@@ -122,7 +111,7 @@ impl Default for RawBytesViewState {
         Self {
             range: (0, 0),
             trim: (false, false),
-            base: Base::default(),
+            base: NumericBase::default(),
             width: 40,
         }
     }
@@ -193,7 +182,7 @@ impl ViewClass for RawBytesView {
             ui.selection_grid("misc").show(ui, |ui| {
                 ui.label("Base");
                 ui.drop_down_menu("base", state.base.to_string(), |ui| {
-                    for variant in Base::iter() {
+                    for variant in NumericBase::iter() {
                         ui.selectable_value(&mut state.base, variant, variant.to_string());
                     }
                 });
@@ -417,7 +406,7 @@ struct TableDelegate<'a> {
     /// Offsets to sub-slice `buffer`
     offsets: (usize, usize),
     /// Numeric base to display the bytes in
-    base: Base,
+    base: NumericBase,
     /// How many bytes to display per table row
     width: usize,
 }
@@ -559,16 +548,18 @@ impl TableDelegate<'_> {
     }
     fn fmt_offset(&self, n: usize) -> String {
         match self.base {
-            Base::Binary => format!("{n:016b}"),
-            Base::Octal => format!("{n:08o}"),
-            Base::Hex => format!("{n:06X}"),
+            NumericBase::Binary => format!("{n:016b}"),
+            NumericBase::Octal => format!("{n:08o}"),
+            NumericBase::Decimal => format!("{n:012}"),
+            NumericBase::Hex => format!("{n:06X}"),
         }
     }
     fn fmt_byte(&self, n: u8) -> String {
         match self.base {
-            Base::Binary => format!("{n:08b}"),
-            Base::Octal => format!("{n:03o}"),
-            Base::Hex => format!("{n:02X}"),
+            NumericBase::Binary => format!("{n:08b}"),
+            NumericBase::Octal => format!("{n:03o}"),
+            NumericBase::Decimal => format!("{n:03}"),
+            NumericBase::Hex => format!("{n:02X}"),
         }
     }
 }

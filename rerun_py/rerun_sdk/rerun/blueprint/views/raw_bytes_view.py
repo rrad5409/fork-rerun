@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 __all__ = ["RawBytesView"]
 
 
+from .. import archetypes as blueprint_archetypes
 from ..api import View, ViewContentsLike, VisualizerLike
 
 if TYPE_CHECKING:
@@ -37,6 +38,7 @@ class RawBytesView(View):
         visible: datatypes.BoolLike | None = None,
         defaults: Iterable[AsComponents | Iterable[DescribedComponentBatch]] | None = None,
         overrides: Mapping[EntityPathLike, VisualizerLike | Iterable[VisualizerLike]] | None = None,
+        query: blueprint_archetypes.RawBytesQuery | None = None,
     ) -> None:
         """
         Construct a blueprint for a new RawBytesView view.
@@ -75,9 +77,17 @@ class RawBytesView(View):
             do not yet support `$origin` relative paths or glob expressions.
             This will be addressed in <https://github.com/rerun-io/rerun/issues/6673>.
 
+        query:
+            Query for raw bytes view
+
         """
 
         properties: dict[str, AsComponents] = {}
+        if query is not None:
+            if not isinstance(query, blueprint_archetypes.RawBytesQuery):
+                query = blueprint_archetypes.RawBytesQuery(query)
+            properties["RawBytesQuery"] = query
+
         super().__init__(
             class_identifier="RawBytes",
             origin=origin,

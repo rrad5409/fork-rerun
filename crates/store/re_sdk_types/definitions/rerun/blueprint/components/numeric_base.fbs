@@ -1,0 +1,20 @@
+namespace rerun.blueprint.components;
+
+/// Common bases a number can be represented in
+enum NumericBase: uint8 (
+  "attr.rerun.scope": "blueprint",
+  "attr.rust.derive": "Default, PartialEq, Eq, strum::EnumIter",
+  "attr.rust.custom_clause": "derive(strum::EnumIter)"
+) {
+  /// Invalid value. Won't show up in generated types.
+  Invalid = 0,
+
+  /// Binary (base-2)
+  Binary = 2,
+  /// Octal (base-8)
+  Octal = 8,
+  /// Decimal (base-10)
+  Decimal = 10,
+  /// Hexadecimal (base-16)
+  Hex = 16 (default),
+}

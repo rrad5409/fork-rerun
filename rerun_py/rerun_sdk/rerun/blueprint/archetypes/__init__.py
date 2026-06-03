@@ -21,6 +21,7 @@ from .near_clip_plane import NearClipPlane
 from .panel_blueprint import PanelBlueprint
 from .plot_background import PlotBackground
 from .plot_legend import PlotLegend
+from .raw_bytes_query import RawBytesQuery
 from .scalar_axis import ScalarAxis
 from .spatial_information import SpatialInformation
 from .tensor_scalar_mapping import TensorScalarMapping
@@ -58,6 +59,7 @@ __all__ = [
     "PanelBlueprint",
     "PlotBackground",
     "PlotLegend",
+    "RawBytesQuery",
     "ScalarAxis",
     "SpatialInformation",
     "TensorScalarMapping",

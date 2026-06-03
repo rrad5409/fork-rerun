@@ -129,6 +129,17 @@ fn generate_component_reflection() -> Result<ComponentReflectionMap, Serializati
             },
         ),
         (
+            <ChunkSize as Component>::name(),
+            ComponentReflection {
+                docstring_md: "Describes the width of a byte chunk\n\n⚠\u{fe0f} **This type is _unstable_ and may change significantly in a way that the data won't be backwards compatible.**",
+                deprecation_summary: None,
+                custom_placeholder: None,
+                datatype: ChunkSize::arrow_datatype(),
+                is_enum: false,
+                verify_arrow_array: ChunkSize::verify_arrow_array,
+            },
+        ),
+        (
             <ColumnOrder as Component>::name(),
             ComponentReflection {
                 docstring_md: "The order of component columns (which remain always grouped by entity path) in the dataframe view.\n\nEntities not in this list are appended at the end in their default order.\nEntities in this list that are not present in the view are ignored.\n\n⚠\u{fe0f} **This type is _unstable_ and may change significantly in a way that the data won't be backwards compatible.**",
@@ -357,6 +368,17 @@ fn generate_component_reflection() -> Result<ComponentReflectionMap, Serializati
                 datatype: NearClipPlane::arrow_datatype(),
                 is_enum: false,
                 verify_arrow_array: NearClipPlane::verify_arrow_array,
+            },
+        ),
+        (
+            <NumericBase as Component>::name(),
+            ComponentReflection {
+                docstring_md: "Common bases a number can be represented in",
+                deprecation_summary: None,
+                custom_placeholder: Some(NumericBase::default().to_arrow()?),
+                datatype: NumericBase::arrow_datatype(),
+                is_enum: true,
+                verify_arrow_array: NumericBase::verify_arrow_array,
             },
         ),
         (
@@ -4280,6 +4302,38 @@ fn generate_archetype_reflection() -> ArchetypeReflectionMap {
                         component_type: "rerun.components.Visible".into(),
                         docstring_md: "Whether the legend is shown at all.\n\nTrue by default.",
                         flags: ArchetypeFieldFlags::UI_EDITABLE,
+                    },
+                ],
+            },
+        ),
+        (
+            ArchetypeName::new("rerun.blueprint.archetypes.RawBytesQuery"),
+            ArchetypeReflection {
+                display_name: "Raw bytes query",
+                deprecation_summary: None,
+                scope: Some("blueprint"),
+                view_types: &[],
+                fields: vec![
+                    ArchetypeFieldReflection {
+                        name: "base",
+                        display_name: "Base",
+                        component_type: "rerun.blueprint.components.NumericBase".into(),
+                        docstring_md: "Numeric base to display bytes in",
+                        flags: ArchetypeFieldFlags::REQUIRED | ArchetypeFieldFlags::UI_EDITABLE,
+                    },
+                    ArchetypeFieldReflection {
+                        name: "width",
+                        display_name: "Width",
+                        component_type: "rerun.blueprint.components.ChunkSize".into(),
+                        docstring_md: "How many columns to display per row",
+                        flags: ArchetypeFieldFlags::REQUIRED | ArchetypeFieldFlags::UI_EDITABLE,
+                    },
+                    ArchetypeFieldReflection {
+                        name: "range",
+                        display_name: "Range",
+                        component_type: "rerun.blueprint.components.FilterByRange".into(),
+                        docstring_md: "Range to filter the bytes from",
+                        flags: ArchetypeFieldFlags::REQUIRED | ArchetypeFieldFlags::UI_EDITABLE,
                     },
                 ],
             },

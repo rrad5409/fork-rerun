@@ -4,5 +4,10 @@ namespace rerun.blueprint.views;
 table RawBytesView (
     "attr.rerun.view_identifier": "RawBytes"
 ) {
+
+  // TODO(rrad5409): can these be part of the visualizer not the view system?
+
+  /// Query for raw bytes view
+  query: rerun.blueprint.archetypes.RawBytesQuery (order: 100);
 }
 

@@ -21,6 +21,7 @@
 #include "blueprint/archetypes/panel_blueprint.hpp"
 #include "blueprint/archetypes/plot_background.hpp"
 #include "blueprint/archetypes/plot_legend.hpp"
+#include "blueprint/archetypes/raw_bytes_query.hpp"
 #include "blueprint/archetypes/scalar_axis.hpp"
 #include "blueprint/archetypes/spatial_information.hpp"
 #include "blueprint/archetypes/tensor_scalar_mapping.hpp"

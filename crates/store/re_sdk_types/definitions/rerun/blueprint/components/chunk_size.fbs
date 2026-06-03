@@ -1,0 +1,13 @@
+namespace rerun.blueprint.components;
+
+
+/// Describes the width of a byte chunk
+table ChunkSize (
+  "attr.python.aliases": "int",
+  "attr.rust.derive": "PartialEq, Eq",
+  "attr.rerun.scope": "blueprint"
+) {
+  /// The size of the chunk
+  size: rerun.datatypes.TimeInt (order: 100);
+}
+
