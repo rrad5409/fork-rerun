@@ -1,7 +1,6 @@
 use re_log_types::EntityPath;
 use re_log_types::external::arrow;
 use re_sdk_types::Archetype as _;
-use re_sdk_types::Loggable as _;
 use re_sdk_types::archetypes;
 use re_sdk_types::components;
 use re_viewer_context::{
@@ -16,8 +15,6 @@ use re_viewer_context::{
 pub struct RawBytesEntry {
     /// The entity that this entry was sourced from
     pub path: EntityPath,
-    /// The component that we read this entry from
-    pub component: re_sdk_types::ComponentIdentifier,
     /// The raw data of this entry
     pub buf: arrow::buffer::Buffer,
 }
@@ -32,6 +29,24 @@ impl IdentifiedViewSystem for RawBytesSystem {
     }
 }
 
+static REFLECTION: std::sync::LazyLock<re_sdk_types::reflection::Reflection> =
+    std::sync::LazyLock::new(|| {
+        re_sdk_types::reflection::generate_reflection().expect("failed to generate reflection data")
+    });
+
+/// All the datatypes that this visualizer can process
+///
+/// This should be every registered type from all components
+static DATATYPES: std::sync::LazyLock<std::collections::HashSet<arrow::datatypes::DataType>> =
+    std::sync::LazyLock::new(|| {
+        REFLECTION
+            .components
+            .values()
+            .cloned()
+            .map(|val| val.datatype)
+            .collect()
+    });
+
 impl VisualizerSystem for RawBytesSystem {
     fn visualizer_query_info(
         &self,
@@ -42,13 +57,8 @@ impl VisualizerSystem for RawBytesSystem {
             constraints: SingleRequiredComponentConstraint::new::<components::Blob>(
                 &archetypes::RawBytes::descriptor_blob(),
             )
-            .with_additional_physical_types([
-                components::Text::arrow_datatype(),
-                components::ImageBuffer::arrow_datatype(),
-                components::VideoSample::arrow_datatype(),
-            ])
+            .with_additional_physical_types(DATATYPES.iter().cloned())
             .into(),
-            // hehe: re_sdk_types::reflection::generate_reflection().unwrap().components
             queried: archetypes::RawBytes::all_components()
                 .into_iter()
                 .cloned()
@@ -67,8 +77,6 @@ impl VisualizerSystem for RawBytesSystem {
         for (data_result, instruction) in
             view_query.iter_visualizer_instruction_for(Self::identifier())
         {
-            ctx.egui_ctx().debug_text(format!("{data_result:#?}"));
-
             let results = re_view::latest_at_with_blueprint_resolved_data(
                 ctx,
                 None,
@@ -87,7 +95,6 @@ impl VisualizerSystem for RawBytesSystem {
             {
                 entries.push(RawBytesEntry {
                     buf,
-                    component: archetypes::RawBytes::descriptor_blob().component,
                     path: results.entity_path().clone(),
                 });
             };

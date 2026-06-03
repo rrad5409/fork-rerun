@@ -339,15 +339,11 @@ fn raw_bytes_ui(ui: &mut egui::Ui, state: &mut RawBytesViewState, entries: &[Raw
             buf.len()
         };
 
-        let id = ui
-            .unique_id()
-            .with(&entry.path)
-            .with(&entry.component.as_str());
+        let id = ui.unique_id().with(&entry.path);
 
         let heading = format!(
-            "{} ({}) [{}/{} bytes]",
+            "{} [{}/{} bytes]",
             entry.path.ui_string(),
-            entry.component.as_str(),
             slice_end - slice_start,
             entry.buf.len(),
         );
