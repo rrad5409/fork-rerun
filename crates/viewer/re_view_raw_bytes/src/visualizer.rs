@@ -15,6 +15,9 @@ use re_viewer_context::{
 pub struct RawBytesEntry {
     /// The entity that this entry was sourced from
     pub path: EntityPath,
+    /// Batch and chunk indices that this buffer was in during enumeration.
+    /// Honestly I don't know if this will ever be anything other than `[0, 0]`
+    pub indices: [usize; 2],
     /// The raw data of this entry
     pub buf: arrow::buffer::Buffer,
 }
@@ -86,17 +89,20 @@ impl VisualizerSystem for RawBytesSystem {
                 Some(instruction),
             );
 
-            // TODO: should we use `results.get_unit_chunk()` instead of `.get_mono()`?
-            // does that allow for multiple components of the same type per entity?
-
-            if let Some(buf) = results
-                .get_mono::<components::Blob>(archetypes::RawBytes::descriptor_blob().component)
-                .map(|blob| blob.0.0.into_inner())
-            {
-                entries.push(RawBytesEntry {
-                    buf,
-                    path: results.entity_path().clone(),
-                });
+            let component = archetypes::RawBytes::descriptor_blob().component;
+            if let Ok(Some(chunk)) = results.get_unit_chunk(component, true) {
+                for (i, batch) in chunk
+                    .iter_component::<components::Blob>(component)
+                    .enumerate()
+                {
+                    for (j, component) in batch.iter().enumerate() {
+                        entries.push(RawBytesEntry {
+                            buf: component.0.0.inner().clone(),
+                            indices: [i, j],
+                            path: results.entity_path().clone(),
+                        });
+                    }
+                }
             };
         }
 

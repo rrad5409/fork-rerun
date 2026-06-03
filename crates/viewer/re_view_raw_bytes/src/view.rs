@@ -342,8 +342,10 @@ fn raw_bytes_ui(ui: &mut egui::Ui, state: &mut RawBytesViewState, entries: &[Raw
         let id = ui.unique_id().with(&entry.path);
 
         let heading = format!(
-            "{} [{}/{} bytes]",
+            "{} (batch {} chunk {}) [{}/{} bytes]",
             entry.path.ui_string(),
+            entry.indices[0],
+            entry.indices[1],
             slice_end - slice_start,
             entry.buf.len(),
         );
